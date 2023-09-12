@@ -1,0 +1,6 @@
+dnserver
+dnserver.exe
+Corefile
+build/
+release/
+vendor/
