@@ -1,0 +1,66 @@
+version: 2
+
+initWorkingDir: &initWorkingDir
+  type: shell
+  name: Initialize Working Directory
+  pwd: /
+  command: |
+    mkdir -p ~/go/src/${CIRCLE_PROJECT_USERNAME}/dnserver
+    sudo chown -R circleci ~/go
+    mkdir -p ~/go/out/tests
+    mkdir -p ~/go/out/logs
+    mkdir -p /home/circleci/logs
+    GOROOT=$(go env GOROOT)
+    sudo rm -r $(go env GOROOT)
+    sudo mkdir $GOROOT
+    LATEST=$(curl -s https://go.dev/VERSION?m=text | grep -v time)
+    curl https://dl.google.com/go/${LATEST}.linux-amd64.tar.gz | sudo tar xz -C $GOROOT --strip-components=1
+
+integrationDefaults: &integrationDefaults
+  machine:
+    image: ubuntu-2004:2022.04.2
+  working_directory: ~/go/src/${CIRCLE_PROJECT_USERNAME}/dnserver
+  environment:
+    - K8S_VERSION: v1.22.0
+    - KIND_VERSION: v0.11.1
+    - KUBECONFIG: /home/circleci/.kube/kind-config-kind
+
+setupKubernetes: &setupKubernetes
+  - run:
+      name: Setup Kubernetes
+      command: ~/go/src/${CIRCLE_PROJECT_USERNAME}/ci/build/kubernetes/k8s_setup.sh
+
+buildDNServerImage: &buildDNServerImage
+  - run:
+      name: Build latest DNServer Docker image
+      command: |
+        cd ~/go/src/${CIRCLE_PROJECT_USERNAME}/dnserver
+        make dnserver SYSTEM="GOOS=linux" && \
+        DOCKER_BUILDKIT=1 docker build -t dnserver . && \
+        kind load docker-image dnserver
+
+jobs:
+  kubernetes-tests:
+    <<: *integrationDefaults
+    steps:
+      - <<: *initWorkingDir
+      - checkout
+      - run:
+          name: Get CI repo
+          command: |
+            mkdir -p ~/go/src/${CIRCLE_PROJECT_USERNAME}/ci
+            git clone https://github.com/${CIRCLE_PROJECT_USERNAME}/ci ~/go/src/${CIRCLE_PROJECT_USERNAME}/ci
+      - <<: *setupKubernetes
+      - <<: *buildDNSImage
+      - run:
+          name: Run Kubernetes tests
+          command: |
+            cd ~/go/src/${CIRCLE_PROJECT_USERNAME}/ci/test/kubernetes
+            go mod tidy
+            go test -v ./...
+
+workflows:
+  version: 2
+  integration-tests:
+    jobs:
+      - kubernetes-tests
