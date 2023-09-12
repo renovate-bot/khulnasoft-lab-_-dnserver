@@ -1,5 +1,3 @@
-[![DNServer](https://dnserver.khulnasoft.com/images/DNServer_Colour_Horizontal.png)](https://dnserver.khulnasoft.com)
-
 [![Documentation](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/khulnasoft-lab/dnserver)
 ![CodeQL](https://github.com/khulnasoft-lab/dnserver/actions/workflows/codeql-analysis.yml/badge.svg)
 ![Go Tests](https://github.com/khulnasoft-lab/dnserver/actions/workflows/go.test.yml/badge.svg)
