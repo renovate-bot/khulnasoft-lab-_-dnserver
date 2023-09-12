@@ -8,6 +8,6 @@ aliases:
   - |
     /wai -> /label works as intended
   - |
-    /release (.*) -> /exec /opt/bin/release-dnserver $1
+    /release (.*) -> /exec /opt/bin/release-dnsserver $1
   - |
-    /docker (.*) -> /exec /opt/bin/docker-dnserver $1
+    /docker (.*) -> /exec /opt/bin/docker-dnsserver $1
